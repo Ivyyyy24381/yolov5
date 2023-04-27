@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 import torch
+import pandas as pd
 
 # Initializa parameters and flags
 FILE = Path(__file__).resolve()
@@ -27,8 +28,8 @@ from utils.torch_utils import select_device, smart_inference_mode
 
 @smart_inference_mode()
 def detect_pothole(
-        weights=ROOT / 'potholeYolo5s.pt',  # model path or triton URL
-        source= 0,  # file/dir/URL/glob/screen/0(webcam)
+        weights=ROOT / 'vTwo.pt',  # model path or triton URL
+        source= 3,  # file/dir/URL/glob/screen/0(webcam)
         imgsz=(640, 640),  # inference size (height, width)
         conf_thres=0.25,  # confidence threshold
         iou_thres=0.45,  # NMS IOU threshold
@@ -51,10 +52,11 @@ def detect_pothole(
     # Directories
     save_dir = increment_path(Path(project) / name, exist_ok=exist_ok)  # increment run
     (save_dir / 'labels' if save_txt else save_dir).mkdir(parents=True, exist_ok=True)  # make dir
-    txt_path = str(ROOT / Path('pothole_detected%s.txt'% source))
-    f = open(txt_path, "w")
-    f.write("")
-    f.close()
+    txt_path = str(ROOT / Path('pothole_detected%s.csv'% source))
+    print("text path at:", txt_path)
+    # f = open(txt_path, "w")
+    # f.write("0,0,0,0")
+    # f.close()
 
     # Load model
     device = select_device(device)
@@ -111,8 +113,8 @@ def detect_pothole(
                     n = (det[:, 5] == c).sum()  # detections per class
                     s += f"{n} {names[int(c)]}{'s' * (n > 1)}, "  # add to string
 
-                # Write results
-                f = open(txt_path, 'w')
+                # # Write results
+                # f = open(txt_path, 'w')
                 for *xyxy, conf, cls in reversed(det):
                     xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
                     # Write to file
@@ -122,19 +124,21 @@ def detect_pothole(
                     # yCenter = (xyxy[3] - xyxy[1])//2
                     xCenter = xywh[0]
                     yCenter = xywh[1]
-                    f.write("%i, %i, %i, %i"%(xCenter, yCenter,  xywh[2],  xywh[3]))
+                    xywh_pd = pd.DataFrame(xywh)
+                    xywh_pd.to_csv(txt_path, float_format = '%g', header = False, index = False)
+                    # f.write("%i, %i, %i, %i"%(xCenter, yCenter,  xywh[2],  xywh[3]))
                     # line = (cls, *xywh, conf) if save_conf else (cls, *xywh)  # label format
                     # f.write(('%g ' * len(line)).rstrip() % line + '\n')
                     # Add bbox to image
                     c = int(cls)  # integer class
                     label = None if hide_labels else (names[c] if hide_conf else f'{names[c]} {conf:.2f}')
                     annotator.box_label(xyxy, label, color=colors(c, True))
-                f.close()
+                # f.close()
             # if not detected, clear file
-            else:
-                f = open(txt_path, "w")
-                f.write("0, 0, 0, 0")
-                f.close()
+            # else:
+            #     f = open(txt_path, "w")
+            #     f.write("0, 0, 0, 0")
+            #     f.close()
                   
             # Stream result
             im0 = annotator.result()
@@ -152,6 +156,8 @@ def detect_pothole(
 
     return xywh
 
-detect_pothole(source = 2)
+model = ROOT / 'vTwo.pt'
+webcam = 2
+detect_pothole(weights = model, source = webcam)
 
 

@@ -155,7 +155,8 @@ def detect_pothole(
             LOGGER.info(f"{s}{len(det)} at x={xCenter} y={yCenter} Time{dt[1].dt * 1E3:.1f}ms")
 
     return xywh
-
-detect_pothole(source = 0)
+model = ROOT / 'vTwo.pt'
+webcam = 3
+detect_pothole(weights = model, source = webcam)
 
 
