@@ -23,7 +23,8 @@ import torch
 import torch.nn as nn
 from PIL import Image
 from torch.cuda import amp
-
+import os
+import sys
 from utils import TryExcept
 from utils.dataloaders import exif_transpose, letterbox
 from utils.general import (LOGGER, ROOT, Profile, check_requirements, check_suffix, check_version, colorstr,
