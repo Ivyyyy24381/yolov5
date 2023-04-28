@@ -125,6 +125,9 @@ def detect_pothole(
                     xCenter = xywh[0]
                     yCenter = xywh[1]
                     xywh_pd = pd.DataFrame(xywh)
+                    if xywh[2]*xywh[3] < 0.25:
+                        xywh_pd = pd.DataFrame([0,0,0,0])
+                        print("Pothole Too Small. Area %f"%(xywh[2]*xywh[3]))
                     xywh_pd.to_csv(txt_path, float_format = '%g', header = False, index = False)
                     # f.write("%i, %i, %i, %i"%(xCenter, yCenter,  xywh[2],  xywh[3]))
                     # line = (cls, *xywh, conf) if save_conf else (cls, *xywh)  # label format
@@ -133,6 +136,11 @@ def detect_pothole(
                     c = int(cls)  # integer class
                     label = None if hide_labels else (names[c] if hide_conf else f'{names[c]} {conf:.2f}')
                     annotator.box_label(xyxy, label, color=colors(c, True))
+            else:
+                xywh = pd.DataFrame([0,0,0,0])
+                xywh_pd = pd.DataFrame(xywh)
+                xywh_pd.to_csv(txt_path, float_format = '%g', header = False, index = False)
+
                 # f.close()
             # if not detected, clear file
             # else:
@@ -156,8 +164,9 @@ def detect_pothole(
 
     return xywh
 
-model = ROOT / 'vTwo.pt'
-webcam = 2
+model = ROOT / 'vTwo.pt' # Jaime's more robust? version
+# model = ROOT / 'PotholeYolo5s.pt' # Ivy's Initial Model
+webcam = 1
 detect_pothole(weights = model, source = webcam)
 
 

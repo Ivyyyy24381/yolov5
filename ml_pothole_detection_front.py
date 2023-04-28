@@ -64,6 +64,11 @@ def detect_pothole(
     stride, names, pt = model.stride, model.names, model.pt
     imgsz = check_img_size(imgsz, s=stride)  # check image size
 
+    # if not detected, clear file
+    xywh = pd.DataFrame([0,0,0,0])
+    xywh_pd = pd.DataFrame(xywh)
+    xywh_pd.to_csv(txt_path, float_format = '%g', header = False, index = False)
+    
     # Dataloader
     bs = 1  # batch_size
     dataset = LoadStreams(source, img_size=imgsz, stride=stride, auto=pt, vid_stride=vid_stride)
@@ -134,12 +139,8 @@ def detect_pothole(
                     label = None if hide_labels else (names[c] if hide_conf else f'{names[c]} {conf:.2f}')
                     annotator.box_label(xyxy, label, color=colors(c, True))
                 # f.close()
-            # if not detected, clear file
-            # else:
-            #     f = open(txt_path, "w")
-            #     f.write("0, 0, 0, 0")
-            #     f.close()
-                  
+        
+
             # Stream result
             im0 = annotator.result()
 
@@ -156,7 +157,8 @@ def detect_pothole(
 
     return xywh
 model = ROOT / 'vTwo.pt'
-webcam = 3
+# model = ROOT / 'PotholeYolo5s.pt' # Ivy's Initial Model
+webcam = 0            
 detect_pothole(weights = model, source = webcam)
 
 
