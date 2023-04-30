@@ -6,7 +6,7 @@ import os
 import platform
 import sys
 from pathlib import Path
-
+import numpy as np
 import torch
 import pandas as pd
 
@@ -69,6 +69,10 @@ def detect_pothole(
     dataset = LoadStreams(source, img_size=imgsz, stride=stride, auto=pt, vid_stride=vid_stride)
     bs = len(dataset)
    
+    # initialize data
+    xywh = pd.DataFrame([[0,0,0,0]], columns =['x', 'y', 'w','h'])
+    xywh_pd = pd.DataFrame(xywh)
+    xywh_pd.to_csv(txt_path, float_format = '%g', header = False, index = False)
 
     # Run inference
     model.warmup(imgsz=(1 if pt or model.triton else bs, 3, *imgsz))  # warmup
@@ -124,11 +128,12 @@ def detect_pothole(
                     # yCenter = (xyxy[3] - xyxy[1])//2
                     xCenter = xywh[0]
                     yCenter = xywh[1]
-                    xywh_pd = pd.DataFrame(xywh)
+                    xywh_new = [[xywh[0], xywh[1], xywh[2], xywh[3]]]
+                    xywh_pd = pd.DataFrame(xywh_new, columns =['x', 'y', 'w','h'])
                     if xywh[2]*xywh[3] < 0.25:
-                        xywh_pd = pd.DataFrame([0,0,0,0])
+                        xywh_pd = pd.DataFrame([[0,0,0,0]],columns =['x', 'y', 'w','h'])
                         print("Pothole Too Small. Area %f"%(xywh[2]*xywh[3]))
-                    xywh_pd.to_csv(txt_path, float_format = '%g', header = False, index = False)
+                    xywh_pd.to_csv(txt_path, float_format = '%g',mode="a", header = False, index = False)
                     # f.write("%i, %i, %i, %i"%(xCenter, yCenter,  xywh[2],  xywh[3]))
                     # line = (cls, *xywh, conf) if save_conf else (cls, *xywh)  # label format
                     # f.write(('%g ' * len(line)).rstrip() % line + '\n')
@@ -137,9 +142,9 @@ def detect_pothole(
                     label = None if hide_labels else (names[c] if hide_conf else f'{names[c]} {conf:.2f}')
                     annotator.box_label(xyxy, label, color=colors(c, True))
             else:
-                xywh = pd.DataFrame([0,0,0,0])
-                xywh_pd = pd.DataFrame(xywh)
-                xywh_pd.to_csv(txt_path, float_format = '%g', header = False, index = False)
+                xywh = pd.DataFrame([[0,0,0,0]],columns =['x', 'y', 'w','h'])
+                xywh_pd = pd.DataFrame(xywh, columns =['x', 'y', 'w','h'])
+                xywh_pd.to_csv(txt_path, float_format = '%g', mode="a", header = False, index = False)
 
                 # f.close()
             # if not detected, clear file
@@ -165,8 +170,9 @@ def detect_pothole(
     return xywh
 
 model = ROOT / 'vTwo.pt' # Jaime's more robust? version
+# model = ROOT / 'v3.pt'
 # model = ROOT / 'PotholeYolo5s.pt' # Ivy's Initial Model
-webcam = 1
+webcam = 2
 detect_pothole(weights = model, source = webcam)
 
 

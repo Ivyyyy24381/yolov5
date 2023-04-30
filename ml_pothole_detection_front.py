@@ -65,7 +65,7 @@ def detect_pothole(
     imgsz = check_img_size(imgsz, s=stride)  # check image size
 
     # if not detected, clear file
-    xywh = pd.DataFrame([0,0,0,0])
+    xywh = pd.DataFrame([[0,0,0,0]], columns =['x', 'y', 'w','h'])
     xywh_pd = pd.DataFrame(xywh)
     xywh_pd.to_csv(txt_path, float_format = '%g', header = False, index = False)
     
@@ -129,8 +129,10 @@ def detect_pothole(
                     # yCenter = (xyxy[3] - xyxy[1])//2
                     xCenter = xywh[0]
                     yCenter = xywh[1]
-                    xywh_pd = pd.DataFrame(xywh)
-                    xywh_pd.to_csv(txt_path, float_format = '%g', header = False, index = False)
+                    xywh_new = [[xywh[0], xywh[1], xywh[2], xywh[3]]]
+                    xywh_pd = pd.DataFrame(xywh_new, columns =['x', 'y', 'w','h'])
+                    xywh_pd.to_csv(txt_path, float_format = '%g', mode='a',header = False, index = False)
+                    
                     # f.write("%i, %i, %i, %i"%(xCenter, yCenter,  xywh[2],  xywh[3]))
                     # line = (cls, *xywh, conf) if save_conf else (cls, *xywh)  # label format
                     # f.write(('%g ' * len(line)).rstrip() % line + '\n')
@@ -156,9 +158,10 @@ def detect_pothole(
             LOGGER.info(f"{s}{len(det)} at x={xCenter} y={yCenter} Time{dt[1].dt * 1E3:.1f}ms")
 
     return xywh
-model = ROOT / 'vTwo.pt'
+# model = ROOT / 'vTwo.pt'
+model = ROOT / 'v3.pt'
 # model = ROOT / 'PotholeYolo5s.pt' # Ivy's Initial Model
-webcam = 0            
+webcam = 3            
 detect_pothole(weights = model, source = webcam)
 
 
